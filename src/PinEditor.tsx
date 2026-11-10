@@ -40,17 +40,21 @@ export default function PinEditor({ visible, pin, onClose, onSave, onDelete }: P
   if (!pin) return null;
 
   const pickPhoto = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permiso', 'Necesito acceso a tus fotos para adjuntar una imagen.');
-      return;
-    }
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.6,
-    });
-    if (!res.canceled && res.assets.length > 0) {
-      setPhotoUri(res.assets[0].uri);
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Permiso', 'Necesito acceso a tus fotos para adjuntar una imagen.');
+        return;
+      }
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.6,
+      });
+      if (!res.canceled && res.assets.length > 0) {
+        setPhotoUri(res.assets[0].uri);
+      }
+    } catch (e) {
+      Alert.alert('Foto', 'No se pudo abrir la galería. Inténtalo de nuevo.');
     }
   };
 
