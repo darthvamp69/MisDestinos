@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native';
@@ -79,15 +80,30 @@ export default function App() {
   };
 
   const goToMyLocation = async () => {
-    const perm = await Location.requestForegroundPermissionsAsync();
-    if (!perm.granted) return;
-    const loc = await Location.getCurrentPositionAsync({});
-    mapRef.current?.animateToRegion({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-      latitudeDelta: 0.3,
-      longitudeDelta: 0.3,
-    });
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Ubicación', 'Activa el permiso de ubicación para centrar el mapa en dónde estás.');
+        return;
+      }
+      // Primero intenta la última ubicación conocida (instantánea); si no hay, pide una nueva.
+      let loc = await Location.getLastKnownPositionAsync();
+      if (!loc) {
+        loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      }
+      if (!loc) {
+        Alert.alert('Ubicación', 'No se pudo obtener tu ubicación ahora. Inténtalo de nuevo en unos segundos, al aire libre.');
+        return;
+      }
+      mapRef.current?.animateToRegion({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        latitudeDelta: 0.3,
+        longitudeDelta: 0.3,
+      });
+    } catch (e) {
+      Alert.alert('Ubicación', 'No se pudo obtener tu ubicación. Revisa que el GPS esté activo e inténtalo de nuevo.');
+    }
   };
 
   const stats = useMemo(() => {
